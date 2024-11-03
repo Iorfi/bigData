@@ -6,6 +6,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier, HistGradientBoostingClassifier
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
 from sklearn.preprocessing import StandardScaler
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.utils import resample
 from sklearn.pipeline import Pipeline
 from sklearn.linear_model import LogisticRegression
@@ -230,12 +231,14 @@ def index():
 
 @app.route('/predict', methods=['POST'])
 def predict():
-    data = request.get_json(force=True)
-    input_data = pd.DataFrame([data])
-    input_data = preprocess_data(input_data)  # Asegúrate de que el preprocesamiento sea adecuado
-    prediction = rf_model.predict(input_data)
-    return jsonify({'prediction': int(prediction[0])})
+    try:
+        data = request.get_json(force=True)
+        input_data = pd.DataFrame([data])
+        input_data = preprocess_data(input_data)  # Asegúrate de que el preprocesamiento sea adecuado
+        prediction = rf_model.predict(input_data)
+        return jsonify({'prediction': int(prediction[0])})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 5000)))
-
