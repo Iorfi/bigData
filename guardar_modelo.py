@@ -6,17 +6,35 @@ import pickle
 
 # Función para preprocesar los datos
 def preprocess_data(df):
+    # Verificar si las columnas 'Family_Income' y 'Exam_Score' existen
+    if 'Family_Income' not in df.columns:
+        raise KeyError("La columna 'Family_Income' no se encuentra en el dataset.")
+    if 'Exam_Score' not in df.columns:
+        raise KeyError("La columna 'Exam_Score' no se encuentra en el dataset.")
+    
     # Mapeo para Family_Income
     income_mapping = {'Bajo': 1, 'Medio': 2, 'Alto': 3}
     df['Family_Income'] = df['Family_Income'].map(income_mapping)
+    
+    # Imputar valores faltantes en Family_Income con la moda (valor más frecuente) o con un valor predeterminado
+    if df['Family_Income'].isnull().any():
+        # Intentar imputar con la moda; si no hay moda, usar un valor predeterminado de 2 (Medio)
+        family_income_mode = df['Family_Income'].mode()
+        if family_income_mode.empty:
+            df['Family_Income'] = df['Family_Income'].fillna(2)  # Usar 2 como valor predeterminado
+        else:
+            df['Family_Income'] = df['Family_Income'].fillna(family_income_mode[0])
 
-    # Variables categóricas restantes
-    categorical_columns = ['Parental_Involvement', 'Access_to_Resources', 'Extracurricular_Activities', 'Motivation_Level',
-                           'Internet_Access', 'Teacher_Quality', 'School_Type', 'Peer_Influence', 'Learning_Disabilities',
-                           'Parental_Education_Level', 'Distance_from_Home', 'Gender']
-    df = pd.get_dummies(df, columns=categorical_columns)
+    # Variables categóricas restantes para convertir en dummies
+    categorical_columns = [
+        'Parental_Involvement', 'Access_to_Resources', 'Extracurricular_Activities', 
+        'Motivation_Level', 'Internet_Access', 'Teacher_Quality', 'School_Type', 
+        'Peer_Influence', 'Learning_Disabilities', 'Parental_Education_Level', 
+        'Distance_from_Home', 'Gender'
+    ]
+    df = pd.get_dummies(df, columns=categorical_columns, drop_first=True)
 
-    # Crear la columna Low_Performance
+    # Crear la columna Low_Performance basada en el valor de Exam_Score
     df['Low_Performance'] = df['Exam_Score'].apply(lambda x: 1 if x < 70 else 0)
 
     return df
